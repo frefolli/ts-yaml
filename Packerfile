@@ -1,0 +1,9 @@
+version: 1.0.0
+license: GPL-3.0
+summary: Yaml parser for C based on tree-sitter-yaml
+makedepends:
+ arch: meson make gcc tree-sitter-grammars/tree-sitter-yaml
+ fedora: meson make gcc tree-sitter-grammars/tree-sitter-yaml
+depends:
+ arch: tree-sitter-grammars/tree-sitter-yaml
+ fedora: tree-sitter-grammars/tree-sitter-yaml
