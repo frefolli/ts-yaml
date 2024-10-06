@@ -18,6 +18,7 @@ int main(int argc, char** args) {
   if (argc > 1) {
     filepath = args[1];
   }
+  printf("reading file: %s\n", filepath);
 
   TSParser* parser = ts_parser_new();
   const TSLanguage* language = tree_sitter_yaml();
@@ -28,14 +29,18 @@ int main(int argc, char** args) {
   TSNode root_node = ts_tree_root_node(tree);
 
   char* repr = ts_node_string(root_node);
-  fprintf(stdout, "%s\n", repr);
+  printf("CST of file: %s\n", repr);
   free(repr);
 
+  printf("Parsing yaml document ...\n");
   YamlObjectp value = parse_yaml(language, root_node, source_code);
+  printf("Dumping yaml document ...\n");
   YamlObject__fprint(stdout, value, 0);
   fputc('\n', stdout);
+  printf("Cleaning yaml document ...\n");
   YamlObject__delete(value);
 
+  printf("Terminating\n");
   ts_tree_delete(tree);
   ts_parser_delete(parser);
   free(source_code);

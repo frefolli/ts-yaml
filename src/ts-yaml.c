@@ -34,13 +34,6 @@ static inline char* ts_node_source_code(TSNode node, const char* source_code) {
   return dst;
 }
 
-YamlFieldp YamlField__new() {
-  YamlFieldp field = malloc(sizeof(struct YamlField));
-  field->key = NULL;
-  field->value = NULL;
-  return field;
-}
-
 YamlObjectp YamlObject__new(enum yaml_object_t kind) {
   YamlObjectp value = malloc(sizeof(struct YamlObject));
   value->kind = kind;
@@ -62,27 +55,11 @@ YamlObjectp YamlObject__new(enum yaml_object_t kind) {
       };
     case MAP_YO:
       {
-        Vector_YamlFieldp__init(&value->map);
+        Map_charp_YamlObjectp__init(&value->map);
         break;
       };
   };
   return value;
-}
-
-void YamlObject__delete(YamlObjectp value);
-
-void YamlField__delete(YamlFieldp value) {
-  if (value != NULL) {
-    if (value->key != NULL) {
-      free(value->key);
-      value->key = NULL;
-    }
-    if (value->value != NULL) {
-      YamlObject__delete(value->value);
-      value->value = NULL;
-    }
-    free(value);
-  }
 }
 
 void YamlObject__delete(YamlObjectp value) {
@@ -114,32 +91,25 @@ void YamlObject__delete(YamlObjectp value) {
       };
     case MAP_YO:
       {
-        YamlFieldp* it = Vector_YamlFieldp__begin(&value->map);
-        YamlFieldp* end = Vector_YamlFieldp__end(&value->map);
+        YamlField* it = Map_charp_YamlObjectp__begin(&value->map);
+        YamlField* end = Map_charp_YamlObjectp__end(&value->map);
         while (it != end) {
-          YamlField__delete(*it);
-          *it = NULL;
+          if (it != NULL) {
+            if (it->first != NULL) {
+              free(it->first);
+              it->first = NULL;
+            }
+            if (it->second != NULL) {
+              YamlObject__delete(it->second);
+              it->second = NULL;
+            }
+          }
           ++it;
         }
-        Vector_YamlFieldp__clean(&value->map);
+        Map_charp_YamlObjectp__clean(&value->map);
         break;
       };
   };
-}
-
-void YamlObject__fprint(FILE* fd, YamlObjectp value, uint64_t tab);
-
-void YamlField__fprint(FILE* fd, YamlFieldp field, uint64_t tab) {
-  tabulate(fd, tab);
-  fprintf(fd, "%s:", field->key);
-  if ((field->value->kind == MAP_YO) || (field->value->kind == LIST_YO)) {
-    tabulate(fd, tab);
-    fputc('\n', fd);
-    YamlObject__fprint(fd, field->value, tab + 1);
-  } else {
-    fputc(' ', fd);
-    YamlObject__fprint(fd, field->value, tab);
-  }
 }
 
 void YamlObject__fprint(FILE* fd, YamlObjectp value, uint64_t tab) {
@@ -172,14 +142,23 @@ void YamlObject__fprint(FILE* fd, YamlObjectp value, uint64_t tab) {
       };
     case MAP_YO:
       {
-        YamlFieldp* begin = Vector_YamlFieldp__begin(&value->map);
-        YamlFieldp* it = begin;
-        YamlFieldp* end = Vector_YamlFieldp__end(&value->map);
+        YamlField* begin = Map_charp_YamlObjectp__begin(&value->map);
+        YamlField* it = begin;
+        YamlField* end = Map_charp_YamlObjectp__end(&value->map);
         while (it != end) {
           if (it != begin) {
             fputc('\n', fd);
           }
-          YamlField__fprint(fd, *it, tab);
+          tabulate(fd, tab);
+          fprintf(fd, "%s:", it->first);
+          if ((it->second->kind == MAP_YO) || (it->second->kind == LIST_YO)) {
+            tabulate(fd, tab);
+            fputc('\n', fd);
+            YamlObject__fprint(fd, it->second, tab + 1);
+          } else {
+            fputc(' ', fd);
+            YamlObject__fprint(fd, it->second, tab);
+          }
           ++it;
         }
         break;
@@ -230,8 +209,8 @@ YamlObjectp parse_yaml_flow_node(const TSLanguage* language, TSNode node, const 
 }
 
 YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, const char* source_code) {
-  YamlObjectp value = YamlObject__new(MAP_YO);
-  assert(value != NULL);
+  YamlObjectp map = YamlObject__new(MAP_YO);
+  assert(map != NULL);
   uint64_t child_count = ts_node_named_child_count(node);
   for (uint64_t i = 0; i < child_count; ++i) {
     TSNode child = ts_node_named_child(node, i);
@@ -243,12 +222,11 @@ YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, co
     TSNode value_node = ts_node_named_child_by_field_name(child, "value");
     assert_not_null(value_node.id);
     
-    YamlFieldp field = YamlField__new();
-    field->key = ts_node_source_code(key_node, source_code);
-    field->value = parse_yaml(language, value_node, source_code);
-    Vector_YamlFieldp__push_back(&value->map, field);
+    char* key = ts_node_source_code(key_node, source_code);
+    YamlObjectp value = parse_yaml(language, value_node, source_code);
+    Map_charp_YamlObjectp__put(&map->map, key, value);
   }
-  return value;
+  return map;
 }
 
 YamlObjectp parse_yaml(const TSLanguage* language, TSNode node, const char* source_code) {

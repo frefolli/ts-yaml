@@ -5,5 +5,5 @@ makedepends:
  arch: meson make gcc tree-sitter-grammars/tree-sitter-yaml frefolli/c-templates
  fedora: meson make gcc tree-sitter-grammars/tree-sitter-yaml frefolli/c-templates
 depends:
- arch: tree-sitter-grammars/tree-sitter-yaml
- fedora: tree-sitter-grammars/tree-sitter-yaml
+ arch: tree-sitter-grammars/tree-sitter-yaml frefolli/c-templates
+ fedora: tree-sitter-grammars/tree-sitter-yaml frefolli/c-templates
