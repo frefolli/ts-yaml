@@ -17,5 +17,5 @@ install: ./builddir/main.exe
 	install ./include/ts-yaml.h $(DESTDIR)/usr/include
 	install -d $(DESTDIR)/usr/lib64
 	install ./builddir/libts-yaml.so $(DESTDIR)/usr/lib64
-	install -d $(DESTDIR)/usr/share
-	install ts-yaml.pc $(DESTDIR)/usr/share
+	install -d $(DESTDIR)/usr/share/pkgconfig
+	install ts-yaml.pc $(DESTDIR)/usr/share/pkgconfig
