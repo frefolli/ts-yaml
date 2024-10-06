@@ -13,14 +13,16 @@ typedef struct YamlObject* YamlObjectp;
 #include <c-templates/vector.h>
 #undef T
 
-typedef char* charp;
-#define K charp
+typedef char* string;
+typedef const char* c_string;
+#define K string
+#define const_K const c_string
 #define V YamlObjectp
 #define K_Equals(Ka, Kb) strcmp(Ka, Kb) == 0
 #include <c-templates/map.h>
 #undef V
 #undef K
-typedef Pair_charp_YamlObjectp YamlField;
+typedef Pair_string_YamlObjectp YamlField;
 
 enum yaml_object_t {
   INTEGER_YO,
@@ -35,16 +37,25 @@ struct YamlObject {
     int integer;
     char* string;
     Vector_YamlObjectp list;
-    Map_charp_YamlObjectp map;
+    Map_string_YamlObjectp map;
   };
 };
 
 YamlObjectp YamlObject__new(enum yaml_object_t kind);
 void YamlObject__delete(YamlObjectp value);
 void YamlObject__fprint(FILE* fd, YamlObjectp value, uint64_t tab);
-YamlObjectp parse_yaml(const TSLanguage* language, TSNode node, const char* source_code);
-YamlObjectp parse_yaml_flow_node(const TSLanguage* language, TSNode node, const char* source_code);
-YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, const char* source_code);
+
+static inline bool YamlObject__is_map(YamlObjectp value) {
+  return value->kind == MAP_YO;
+}
+static inline bool YamlObject__is_list(YamlObjectp value) {
+  return value->kind == LIST_YO;
+}
+
+YamlObjectp YamlObject__get(YamlObjectp map, const char* field);
+size_t YamlObject__size(YamlObjectp list);
+YamlObjectp YamlObject__at(YamlObjectp list, size_t idx);
+
 YamlObjectp parse_yaml(const TSLanguage* language, TSNode node, const char* source_code);
 YamlObjectp parse_yaml_file(const char* filepath);
 #endif

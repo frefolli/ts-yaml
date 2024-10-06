@@ -1,6 +1,11 @@
 #include <ts-yaml.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
+
+YamlObjectp parse_yaml(const TSLanguage* language, TSNode node, const char* source_code);
+YamlObjectp parse_yaml_flow_node(const TSLanguage* language, TSNode node, const char* source_code);
+YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, const char* source_code);
 
 static inline void tabulate(FILE* fd, uint64_t tab) {
   for (uint64_t i = 0; i < tab; ++i)
@@ -55,7 +60,7 @@ YamlObjectp YamlObject__new(enum yaml_object_t kind) {
       };
     case MAP_YO:
       {
-        Map_charp_YamlObjectp__init(&value->map);
+        Map_string_YamlObjectp__init(&value->map);
         break;
       };
   };
@@ -91,8 +96,8 @@ void YamlObject__delete(YamlObjectp value) {
       };
     case MAP_YO:
       {
-        YamlField* it = Map_charp_YamlObjectp__begin(&value->map);
-        YamlField* end = Map_charp_YamlObjectp__end(&value->map);
+        YamlField* it = Map_string_YamlObjectp__begin(&value->map);
+        YamlField* end = Map_string_YamlObjectp__end(&value->map);
         while (it != end) {
           if (it != NULL) {
             if (it->first != NULL) {
@@ -106,7 +111,7 @@ void YamlObject__delete(YamlObjectp value) {
           }
           ++it;
         }
-        Map_charp_YamlObjectp__clean(&value->map);
+        Map_string_YamlObjectp__clean(&value->map);
         break;
       };
   };
@@ -142,9 +147,9 @@ void YamlObject__fprint(FILE* fd, YamlObjectp value, uint64_t tab) {
       };
     case MAP_YO:
       {
-        YamlField* begin = Map_charp_YamlObjectp__begin(&value->map);
+        YamlField* begin = Map_string_YamlObjectp__begin(&value->map);
         YamlField* it = begin;
-        YamlField* end = Map_charp_YamlObjectp__end(&value->map);
+        YamlField* end = Map_string_YamlObjectp__end(&value->map);
         while (it != end) {
           if (it != begin) {
             fputc('\n', fd);
@@ -164,6 +169,26 @@ void YamlObject__fprint(FILE* fd, YamlObjectp value, uint64_t tab) {
         break;
       };
   }
+}
+
+YamlObjectp YamlObject__get(YamlObjectp map, const char* field) {
+  assert(YamlObject__is_map(map));
+  return Map_string_YamlObjectp__get(&map->map, field);
+}
+
+bool YamlObject__contains(YamlObjectp map, const char* field) {
+  assert(YamlObject__is_map(map));
+  return Map_string_YamlObjectp__contains(&map->map, field);
+}
+
+size_t YamlObject__size(YamlObjectp list) {
+  assert(YamlObject__is_list(list));
+  return Vector_YamlObjectp__size(&list->list);
+}
+
+YamlObjectp YamlObject__at(YamlObjectp list, size_t idx) {
+  assert(YamlObject__is_list(list));
+  return Vector_YamlObjectp__get(&list->list, idx);
 }
 
 YamlObjectp parse_yaml(const TSLanguage* language, TSNode node, const char* source_code);
@@ -224,7 +249,7 @@ YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, co
     
     char* key = ts_node_source_code(key_node, source_code);
     YamlObjectp value = parse_yaml(language, value_node, source_code);
-    Map_charp_YamlObjectp__put(&map->map, key, value);
+    Map_string_YamlObjectp__put(&map->map, key, value);
   }
   return map;
 }
