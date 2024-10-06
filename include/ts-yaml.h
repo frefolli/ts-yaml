@@ -51,6 +51,12 @@ static inline bool YamlObject__is_map(YamlObjectp value) {
 static inline bool YamlObject__is_list(YamlObjectp value) {
   return value->kind == LIST_YO;
 }
+static inline bool YamlObject__is_integer(YamlObjectp value) {
+  return value->kind == INTEGER_YO;
+}
+static inline bool YamlObject__is_string(YamlObjectp value) {
+  return value->kind == STRING_YO;
+}
 
 YamlObjectp YamlObject__get(YamlObjectp map, const char* field);
 bool YamlObject__contains(YamlObjectp map, const char* field);
