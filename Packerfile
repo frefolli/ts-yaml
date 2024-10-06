@@ -1,4 +1,4 @@
-version: 1.0.0
+version: 1.0.1
 license: GPL-3.0
 summary: Yaml parser for C based on tree-sitter-yaml
 makedepends:
