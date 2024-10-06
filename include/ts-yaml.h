@@ -46,4 +46,5 @@ YamlObjectp parse_yaml(const TSLanguage* language, TSNode node, const char* sour
 YamlObjectp parse_yaml_flow_node(const TSLanguage* language, TSNode node, const char* source_code);
 YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, const char* source_code);
 YamlObjectp parse_yaml(const TSLanguage* language, TSNode node, const char* source_code);
+YamlObjectp parse_yaml_file(const char* filepath);
 #endif
