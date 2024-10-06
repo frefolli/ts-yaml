@@ -53,6 +53,7 @@ static inline bool YamlObject__is_list(YamlObjectp value) {
 }
 
 YamlObjectp YamlObject__get(YamlObjectp map, const char* field);
+bool YamlObject__contains(YamlObjectp map, const char* field);
 size_t YamlObject__size(YamlObjectp list);
 YamlObjectp YamlObject__at(YamlObjectp list, size_t idx);
 
