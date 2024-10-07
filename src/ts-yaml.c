@@ -210,9 +210,6 @@ YamlObjectp parse_yaml_flow_node(const TSLanguage* language, TSNode node, const 
     } else if (strcmp(symbol_name, "string_scalar") == 0) {
       value = YamlObject__new(STRING_YO);
       value->string = ts_node_source_code(subchild, source_code);
-    } else {
-      fprintf(stderr, "symbol_name: '%s' not mapped\n", symbol_name);
-      exit(1);
     }
   } else  if (strcmp(symbol_name, "double_quote_scalar") == 0) {
     value = YamlObject__new(STRING_YO);
@@ -222,20 +219,22 @@ YamlObjectp parse_yaml_flow_node(const TSLanguage* language, TSNode node, const 
     uint64_t child_count = ts_node_named_child_count(child);
     for (uint64_t i = 0; i < child_count; ++i) {
       TSNode subchild = ts_node_named_child(child, i);
-      Vector_YamlObjectp__push_back(&value->list, parse_yaml(language, subchild, source_code));
+      YamlObjectp subvalue = parse_yaml(language, subchild, source_code);
+      if (subvalue != NULL) {
+        Vector_YamlObjectp__push_back(&value->list, subvalue);
+      } else {
+        YamlObject__delete(value);
+        value = NULL;
+        break;
+      }
     }
-  } else {
-    fprintf(stderr, "symbol_name: '%s' not mapped\n", symbol_name);
-    exit(1);
   }
 
-  assert(value != NULL);
   return value;
 }
 
 YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, const char* source_code) {
   YamlObjectp map = YamlObject__new(MAP_YO);
-  assert(map != NULL);
   uint64_t child_count = ts_node_named_child_count(node);
   for (uint64_t i = 0; i < child_count; ++i) {
     TSNode child = ts_node_named_child(node, i);
@@ -249,7 +248,13 @@ YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, co
     
     char* key = ts_node_source_code(key_node, source_code);
     YamlObjectp value = parse_yaml(language, value_node, source_code);
-    Map_string_YamlObjectp__put(&map->map, key, value);
+    if (value != NULL) {
+      Map_string_YamlObjectp__put(&map->map, key, value);
+    } else {
+      YamlObject__delete(map);
+      map = NULL;
+      break;
+    }
   }
   return map;
 }
@@ -268,12 +273,8 @@ YamlObjectp parse_yaml(const TSLanguage* language, TSNode node, const char* sour
     result = parse_yaml_block_mapping(language, node, source_code);
   } else if (strcmp(symbol_name, "flow_node") == 0) {
     result = parse_yaml_flow_node(language, node, source_code);
-  }  else {
-    fprintf(stderr, "symbol_name: '%s' not mapped\n", symbol_name);
-    exit(1);
   }
 
-  assert(result != NULL);
   return result;
 }
 
@@ -299,6 +300,14 @@ YamlObjectp parse_yaml_file(const char* filepath) {
   TSNode root_node = ts_tree_root_node(tree);
 
   YamlObjectp value = parse_yaml(language, root_node, source_code);
+
+  if (value == NULL) {
+    char* repr = ts_node_string(root_node);
+    fprintf(stderr, "source_code: `%s'\n", source_code);
+    fprintf(stderr, "repr: `%s'\n", repr);
+    free(repr);
+  }
+
   ts_tree_delete(tree);
   ts_parser_delete(parser);
   free(source_code);

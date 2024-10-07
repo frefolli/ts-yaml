@@ -10,7 +10,9 @@ clean:
 	rm -rf builddir
 
 run: ./builddir/main.exe
-	./builddir/main.exe example.yaml
+	./builddir/main.exe examples/correct.yaml
+	@ echo "################################################################################################################################################################################################"
+	./builddir/main.exe examples/wrong.yaml
 
 install: ./builddir/main.exe
 	install -d $(DESTDIR)/usr/include
