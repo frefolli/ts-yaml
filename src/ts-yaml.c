@@ -168,6 +168,8 @@ void YamlObject__fprint(FILE* fd, YamlObjectp value, uint64_t tab) {
         }
         break;
       };
+    default:
+      assert(false);
   }
 }
 
@@ -285,8 +287,8 @@ static inline char* read_source_code(const char* filepath) {
     long fsize = ftell(file);
     fseek(file, 0, SEEK_SET);
     text = (char*) malloc(fsize + 1);
+    text[fsize] = '\0';
     fsize = fread(text, fsize, 1, file);
-    fclose(file);
     return text;
 }
 
