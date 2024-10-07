@@ -13,6 +13,7 @@ int main(int argc, char** args) {
       fprintf(stdout, "\n");
       YamlObject__delete(value);
     } else {
+      fprintf(stderr, "ERROR: unable to read\n");
       return 1;
     }
   }
