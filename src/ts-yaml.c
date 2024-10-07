@@ -1,3 +1,4 @@
+#include <tree_sitter/api.h>
 #include <ts-yaml.h>
 #include <stdlib.h>
 #include <string.h>
@@ -116,6 +117,7 @@ void YamlObject__delete(YamlObjectp value) {
         break;
       };
   };
+  free(value);
 }
 
 void YamlObject__fprint(FILE* fd, YamlObjectp value, uint64_t tab) {
@@ -254,6 +256,8 @@ YamlObjectp parse_yaml_block_mapping(const TSLanguage* language, TSNode node, co
     if (value != NULL) {
       Map_string_YamlObjectp__put(&map->map, key, value);
     } else {
+      free(key);
+      key = NULL;
       YamlObject__delete(map);
       map = NULL;
       break;
@@ -295,6 +299,7 @@ static inline char* read_source_code(const char* filepath) {
     text = (char*) malloc(fsize + 1);
     text[fsize] = '\0';
     fsize = fread(text, fsize, 1, file);
+    fclose(file);
     return text;
 }
 
@@ -324,6 +329,7 @@ YamlObjectp parse_yaml_file(const char* filepath) {
 
   ts_tree_delete(tree);
   ts_parser_delete(parser);
+  ts_language_delete(language);
   free(source_code);
 
   return value;
